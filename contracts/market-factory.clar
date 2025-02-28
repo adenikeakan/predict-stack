@@ -37,3 +37,44 @@
 (define-read-only (get-creation-fee)
   (var-get creation-fee)
 )
+
+;; Public functions
+
+(define-public (create-market 
+  (question (string-utf8 256)) 
+  (outcomes (list 5 (string-utf8 64))) 
+  (resolution-deadline uint))
+  (let
+    (
+      (new-market-id (+ (var-get last-market-id) u1))
+      (current-block block-height)
+      (curr-fee (var-get creation-fee))
+    )
+    ;; Validate parameters
+    (asserts! (> (len question) u0) ERR-INVALID-PARAMETERS)
+    (asserts! (>= (len outcomes) u2) ERR-INVALID-PARAMETERS)
+    (asserts! (> resolution-deadline current-block) ERR-INVALID-PARAMETERS)
+
+    ;; Process creation fee
+    (try! (stx-transfer? curr-fee tx-sender CONTRACT-OWNER))
+
+    ;; Create market entry
+    (map-set markets 
+      { market-id: new-market-id }
+      { 
+        creator: tx-sender,
+        question: question,
+        outcomes: outcomes,
+        resolution-deadline: resolution-deadline,
+        creation-block: current-block,
+        is-resolved: false
+      }
+    )
+
+    ;; Update last market ID
+    (var-set last-market-id new-market-id)
+
+    ;; Return the new market ID
+    (ok new-market-id)
+  )
+)
