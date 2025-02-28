@@ -1,10 +1,15 @@
-;; PredictStack: Simple Base Implementation
-;; Basic prediction market factory for Stacks blockchain
+;; PredictStack Market Factory Contract
+;; This contract is responsible for creating new prediction markets and tracking them
 
 ;; Constants
 (define-constant CONTRACT-OWNER tx-sender)
 (define-constant ERR-NOT-AUTHORIZED (err u100))
 (define-constant ERR-INVALID-PARAMETERS (err u101))
+(define-constant ERR-MARKET-ALREADY-EXISTS (err u102))
+(define-constant ERR-INSUFFICIENT-FUNDS (err u103))
+(define-constant ERR-DEADLINE-PASSED (err u104))
+(define-constant ERR-INVALID-OUTCOMES (err u105))
+(define-constant ERR-MARKET-NOT-FOUND (err u106))
 (define-constant MINIMUM-CREATION-FEE u1000000) ;; 1 STX in microSTX
 
 ;; Data maps
@@ -13,16 +18,29 @@
   { 
     creator: principal,
     question: (string-utf8 256),
+    description: (string-utf8 1024),
     outcomes: (list 5 (string-utf8 64)),
+    outcome-count: uint,
     resolution-deadline: uint,
     creation-block: uint,
-    is-resolved: bool
+    contract-address: principal,
+    is-resolved: bool,
+    status: (string-ascii 20)
   }
+)
+
+;; Creator to markets mapping
+(define-map creator-markets
+  { creator: principal }
+  { market-ids: (list 100 uint) }
 )
 
 ;; Variables
 (define-data-var last-market-id uint u0)
+(define-data-var treasury-address principal CONTRACT-OWNER)
 (define-data-var creation-fee uint MINIMUM-CREATION-FEE)
+(define-data-var is-paused bool false)
+
 
 ;; Read-only functions
 
