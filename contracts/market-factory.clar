@@ -23,3 +23,17 @@
 ;; Variables
 (define-data-var last-market-id uint u0)
 (define-data-var creation-fee uint MINIMUM-CREATION-FEE)
+
+;; Read-only functions
+
+(define-read-only (get-market (market-id uint))
+  (map-get? markets { market-id: market-id })
+)
+
+(define-read-only (get-last-market-id)
+  (var-get last-market-id)
+)
+
+(define-read-only (get-creation-fee)
+  (var-get creation-fee)
+)
