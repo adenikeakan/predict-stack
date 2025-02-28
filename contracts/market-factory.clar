@@ -70,11 +70,13 @@
   )
 )
 
-
 ;; Read-only functions
-
 (define-read-only (get-market (market-id uint))
   (map-get? markets { market-id: market-id })
+)
+
+(define-read-only (get-markets-by-creator (creator principal))
+  (map-get? creator-markets { creator: creator })
 )
 
 (define-read-only (get-last-market-id)
@@ -84,6 +86,11 @@
 (define-read-only (get-creation-fee)
   (var-get creation-fee)
 )
+
+(define-read-only (is-contract-paused)
+  (var-get is-paused)
+)
+
 
 ;; Public functions
 
