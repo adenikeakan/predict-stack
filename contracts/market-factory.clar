@@ -94,8 +94,10 @@
 
 ;; Public functions
 
+;; Public functions
 (define-public (create-market 
   (question (string-utf8 256)) 
+  (description (string-utf8 1024)) 
   (outcomes (list 5 (string-utf8 64))) 
   (resolution-deadline uint))
   (let
@@ -103,35 +105,47 @@
       (new-market-id (+ (var-get last-market-id) u1))
       (current-block block-height)
       (curr-fee (var-get creation-fee))
+      (outcome-count (len outcomes))
     )
+    ;; Check if contract is paused
+    (asserts! (not (var-get is-paused)) ERR-NOT-AUTHORIZED)
+    
     ;; Validate parameters
     (asserts! (> (len question) u0) ERR-INVALID-PARAMETERS)
-    (asserts! (>= (len outcomes) u2) ERR-INVALID-PARAMETERS)
-    (asserts! (> resolution-deadline current-block) ERR-INVALID-PARAMETERS)
-
+    (asserts! (validate-outcomes outcomes) ERR-INVALID-OUTCOMES)
+    (asserts! (> resolution-deadline current-block) ERR-DEADLINE-PASSED)
+    
     ;; Process creation fee
-    (try! (stx-transfer? curr-fee tx-sender CONTRACT-OWNER))
-
+    (try! (stx-transfer? curr-fee tx-sender (var-get treasury-address)))
+    
     ;; Create market entry
     (map-set markets 
       { market-id: new-market-id }
       { 
         creator: tx-sender,
         question: question,
+        description: description,
         outcomes: outcomes,
+        outcome-count: outcome-count,
         resolution-deadline: resolution-deadline,
         creation-block: current-block,
-        is-resolved: false
+        contract-address: tx-sender, ;; To be updated later with actual contract address
+        is-resolved: false,
+        status: "active"
       }
     )
-
+    
+    ;; Add market to creator's list
+    (try! (add-market-to-creator-list tx-sender new-market-id))
+    
     ;; Update last market ID
     (var-set last-market-id new-market-id)
-
+    
     ;; Return the new market ID
     (ok new-market-id)
   )
 )
+
 
 ;; Admin functions
 
