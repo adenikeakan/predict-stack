@@ -146,6 +146,63 @@
   )
 )
 
+;; Update market contract address
+(define-public (update-market-contract-address (market-id uint) (market-contract principal))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    ;; Only allow creator to update contract address
+    (asserts! (is-eq (get creator market) tx-sender) ERR-NOT-AUTHORIZED)
+
+    ;; Update contract address
+    (map-set markets
+      { market-id: market-id }
+      (merge market { contract-address: market-contract })
+    )
+
+    (ok true)
+  )
+)
+
+;; Update market status
+(define-public (update-market-status (market-id uint) (new-status (string-ascii 20)))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    ;; Only allow owner or creator to update status
+    (asserts! (or (is-eq (get creator market) tx-sender) (is-owner)) ERR-NOT-AUTHORIZED)
+
+    ;; Update market status
+    (map-set markets
+      { market-id: market-id }
+      (merge market { status: new-status })
+    )
+
+    (ok true)
+  )
+)
+
+;; Mark market as resolved
+(define-public (mark-market-resolved (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    ;; Verify the caller is authorized (should be the market contract itself)
+    (asserts! (is-eq (get contract-address market) tx-sender) ERR-NOT-AUTHORIZED)
+
+    ;; Update resolution status
+    (map-set markets
+      { market-id: market-id }
+      (merge market { is-resolved: true, status: "resolved" })
+    )
+
+    (ok true)
+  )
+)
+
 
 ;; Admin functions
 
