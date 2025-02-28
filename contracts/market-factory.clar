@@ -78,3 +78,13 @@
     (ok new-market-id)
   )
 )
+
+;; Admin functions
+
+(define-public (set-creation-fee (new-fee uint))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (var-set creation-fee new-fee)
+    (ok true)
+  )
+)
