@@ -203,13 +203,27 @@
   )
 )
 
-
 ;; Admin functions
+(define-public (set-treasury-address (new-address principal))
+  (begin
+    (asserts! (is-owner) ERR-NOT-AUTHORIZED)
+    (var-set treasury-address new-address)
+    (ok true)
+  )
+)
 
 (define-public (set-creation-fee (new-fee uint))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-owner) ERR-NOT-AUTHORIZED)
     (var-set creation-fee new-fee)
+    (ok true)
+  )
+)
+
+(define-public (pause-contract (paused bool))
+  (begin
+    (asserts! (is-owner) ERR-NOT-AUTHORIZED)
+    (var-set is-paused paused)
     (ok true)
   )
 )
