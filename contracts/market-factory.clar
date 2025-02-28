@@ -41,6 +41,35 @@
 (define-data-var creation-fee uint MINIMUM-CREATION-FEE)
 (define-data-var is-paused bool false)
 
+;; Private functions
+(define-private (is-owner)
+  (is-eq tx-sender CONTRACT-OWNER)
+)
+
+(define-private (add-market-to-creator-list (creator principal) (market-id uint))
+  (let
+    (
+      (current-markets (default-to { market-ids: (list) } (map-get? creator-markets { creator: creator })))
+      (current-market-list (get market-ids current-markets))
+      (new-market-list (unwrap! (as-max-len? (append current-market-list market-id) u100) ERR-INVALID-PARAMETERS))
+    )
+    (map-set creator-markets { creator: creator } { market-ids: new-market-list })
+    (ok true)
+  )
+)
+
+(define-private (validate-outcomes (outcomes (list 5 (string-utf8 64))))
+  (let
+    (
+      (outcome-count (len outcomes))
+    )
+    (and 
+      (>= outcome-count u2) ;; Must have at least 2 outcomes
+      (<= outcome-count u5) ;; Cannot have more than 5 outcomes
+    )
+  )
+)
+
 
 ;; Read-only functions
 
